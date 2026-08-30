@@ -46,12 +46,12 @@
 
     <script>
         async function loadPhotos() {
-            const response = await fetch("http://127.0.0.1:8000/list");
+            const response = await fetch("/list");
             const data = await response.json();
             const container = document.getElementById("photo-container");
             container.innerHTML = "";
             data.photos.forEach(filename => {
-                const url = "http://127.0.0.1:8000/photos/" + filename;
+                const url = "/photos/" + filename;
                 const img = document.createElement("img");
                 img.src = url;
                 img.className = "thumb";
