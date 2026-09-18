@@ -1,10 +1,72 @@
 <!DOCTYPE html>
 <html>
+<head>
+    <style>
+        body { font-family: Arial; text-align: center; padding: 20px; }
+        .thumb-row { display: flex; align-items: center; justify-content: center; margin: 8px; gap: 10px; }
+        .thumb-row img { width: 80px; border-radius: 6px; }
+        .delBtn { background: #e53935; color: white; border: none; padding: 6px 14px; border-radius: 5px; cursor: pointer; }
+    </style>
+</head>
 <body>
     <h2>Teja Digitals</h2>
-    <form action="/upload" method="post" enctype="multipart/form-data">
-        <input type="file" name="file">
-        <button type="submit">Upload</button>
-    </form>
+    <p>Event name:</p>
+    <input type="text" id="eventName" placeholder="e.g. ramesh-wedding">
+    <br><br>
+    <input type="file" id="fileInput">
+    <button onclick="uploadPhoto()">Upload</button>
+    <p id="status"></p>
+
+    <h3>Uploaded Photos (click Refresh after adding event name)</h3>
+    <button onclick="loadList()">Refresh List</button>
+    <div id="photoList"></div>
+
+    <script>
+        async function uploadPhoto() {
+            const event = document.getElementById("eventName").value.trim();
+            const file = document.getElementById("fileInput").files[0];
+            if (!event || !file) {
+                document.getElementById("status").innerText = "Event name and photo both required!";
+                return;
+            }
+            const formData = new FormData();
+            formData.append("file", file);
+            const response = await fetch("/upload/" + event, {
+                method: "POST",
+                body: formData
+            });
+            const data = await response.json();
+            document.getElementById("status").innerText = data.message;
+            loadList();
+        }
+
+        async function loadList() {
+            const event = document.getElementById("eventName").value.trim();
+            if (!event) return;
+            const response = await fetch("/list/" + event);
+            const data = await response.json();
+            const container = document.getElementById("photoList");
+            container.innerHTML = "";
+            data.photos.forEach(filename => {
+                const row = document.createElement("div");
+                row.className = "thumb-row";
+                row.innerHTML = `
+                    <img src="/photos/${event}/${filename}">
+                    <span>${filename}</span>
+                    <button class="delBtn" onclick="deletePhoto('${filename}')">Delete</button>
+                `;
+                container.appendChild(row);
+            });
+        }
+
+        async function deletePhoto(filename) {
+            const event = document.getElementById("eventName").value.trim();
+            if (!confirm("Delete this photo?")) return;
+            const response = await fetch("/delete/" + event + "/" + filename, { method: "DELETE" });
+            const data = await response.json();
+            alert(data.message);
+            loadList();
+        }
+    </script>
 </body>
 </html>

@@ -14,22 +14,32 @@ app.add_middleware(
 
 @app.get("/")
 def home():
-    return {"message": "Wedding gallery server working!"}
+    return {"message": "Teja Digitals server working!"}
 
-@app.post("/upload")
-def upload_photo(file: UploadFile):
-    os.makedirs("uploads", exist_ok=True)
-    file_path = f"uploads/{file.filename}"
+@app.post("/upload/{event}")
+def upload_photo(event: str, file: UploadFile):
+    folder = f"uploads/{event}"
+    os.makedirs(folder, exist_ok=True)
+    file_path = f"{folder}/{file.filename}"
     with open(file_path, "wb") as f:
         f.write(file.file.read())
     return {"message": "Photo uploaded successfully!", "filename": file.filename}
 
-os.makedirs("uploads", exist_ok=True)
-app.mount("/photos", StaticFiles(directory="uploads"), name="photos")
-
-@app.get("/list")
-def list_photos():
-    files = os.listdir("uploads")
+@app.get("/list/{event}")
+def list_photos(event: str):
+    folder = f"uploads/{event}"
+    os.makedirs(folder, exist_ok=True)
+    files = os.listdir(folder)
     return {"photos": files}
 
+@app.delete("/delete/{event}/{filename}")
+def delete_photo(event: str, filename: str):
+    file_path = f"uploads/{event}/{filename}"
+    if os.path.exists(file_path):
+        os.remove(file_path)
+        return {"message": "Photo deleted successfully!"}
+    return {"message": "Photo not found!"}
+
+os.makedirs("uploads", exist_ok=True)
+app.mount("/photos", StaticFiles(directory="uploads"), name="photos")
 app.mount("/", StaticFiles(directory=".", html=True), name="static")
