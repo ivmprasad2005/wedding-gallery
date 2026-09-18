@@ -1,72 +1,121 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <title>Teja Digitals — Admin</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
-        body { font-family: Arial; text-align: center; padding: 20px; }
-        .thumb-row { display: flex; align-items: center; justify-content: center; margin: 8px; gap: 10px; }
-        .thumb-row img { width: 80px; border-radius: 6px; }
-        .delBtn { background: #e53935; color: white; border: none; padding: 6px 14px; border-radius: 5px; cursor: pointer; }
+        * { box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f4f6f9; margin: 0; padding: 20px; color: #222; }
+        .card { max-width: 700px; margin: 0 auto 20px; background: white; border-radius: 12px; padding: 25px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
+        h1 { text-align: center; color: #1a1a2e; margin: 0 0 5px; font-size: 24px; }
+        .sub { text-align: center; color: #888; font-size: 13px; margin-bottom: 25px; }
+        label { display: block; font-weight: 600; margin-bottom: 6px; font-size: 14px; }
+        input[type="text"], input[type="file"] { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 15px; margin-bottom: 18px; }
+        button { background: #1a1a2e; color: white; border: none; padding: 13px 25px; border-radius: 8px; font-size: 15px; cursor: pointer; width: 100%; font-weight: 600; }
+        button:hover { background: #33334d; }
+        button:disabled { background: #999; cursor: not-allowed; }
+        .btn-sec { background: #e8eaf0; color: #1a1a2e; margin-top: 10px; }
+        .btn-sec:hover { background: #d5d8e2; }
+        #status { text-align: center; margin-top: 15px; font-size: 14px; font-weight: 600; }
+        .progress-wrap { background: #eee; border-radius: 20px; height: 22px; margin-top: 15px; overflow: hidden; display: none; }
+        .progress-bar { background: #4CAF50; height: 100%; width: 0%; transition: width .2s; color: white; font-size: 12px; text-align: center; line-height: 22px; }
+        .photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 12px; margin-top: 15px; }
+        .photo-item { position: relative; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 6px rgba(0,0,0,.12); }
+        .photo-item img { width: 100%; height: 110px; object-fit: cover; display: block; }
+        .delBtn { position: absolute; top: 5px; right: 5px; background: rgba(229,57,53,.92); color: white; border: none; width: 26px; height: 26px; border-radius: 50%; cursor: pointer; font-size: 15px; line-height: 1; padding: 0; }
+        .count { text-align: center; color: #666; font-size: 13px; margin-top: 12px; }
     </style>
 </head>
 <body>
-    <h2>Teja Digitals</h2>
-    <p>Event name:</p>
-    <input type="text" id="eventName" placeholder="e.g. ramesh-wedding">
-    <br><br>
-    <input type="file" id="fileInput">
-    <button onclick="uploadPhoto()">Upload</button>
-    <p id="status"></p>
 
-    <h3>Uploaded Photos (click Refresh after adding event name)</h3>
-    <button onclick="loadList()">Refresh List</button>
-    <div id="photoList"></div>
+<div class="card">
+    <h1>తేజా స్టూడియో</h1>
+    <div class="sub">Photo Upload Panel</div>
 
-    <script>
-        async function uploadPhoto() {
-            const event = document.getElementById("eventName").value.trim();
-            const file = document.getElementById("fileInput").files[0];
-            if (!event || !file) {
-                document.getElementById("status").innerText = "Event name and photo both required!";
-                return;
-            }
+    <label>Event / Customer Name</label>
+    <input type="text" id="eventName" placeholder="example: ramesh-wedding">
+
+    <label>Select Photos (multiple allowed)</label>
+    <input type="file" id="fileInput" multiple accept="image/*">
+
+    <button id="uploadBtn" onclick="uploadPhotos()">Upload Photos</button>
+    <button class="btn-sec" onclick="loadList()">Show Uploaded Photos</button>
+
+    <div class="progress-wrap" id="progressWrap">
+        <div class="progress-bar" id="progressBar">0%</div>
+    </div>
+    <div id="status"></div>
+</div>
+
+<div class="card">
+    <label>Uploaded Photos</label>
+    <div class="photo-grid" id="photoList"></div>
+    <div class="count" id="countText"></div>
+</div>
+
+<script>
+    async function uploadPhotos() {
+        const event = document.getElementById("eventName").value.trim();
+        const files = document.getElementById("fileInput").files;
+        const btn = document.getElementById("uploadBtn");
+        const status = document.getElementById("status");
+        const wrap = document.getElementById("progressWrap");
+        const bar = document.getElementById("progressBar");
+
+        if (!event) { status.innerText = "⚠️ Event name required"; status.style.color = "#e53935"; return; }
+        if (files.length === 0) { status.innerText = "⚠️ Select at least one photo"; status.style.color = "#e53935"; return; }
+
+        btn.disabled = true;
+        wrap.style.display = "block";
+        status.style.color = "#1a1a2e";
+        let done = 0, failed = 0;
+
+        for (let i = 0; i < files.length; i++) {
             const formData = new FormData();
-            formData.append("file", file);
-            const response = await fetch("/upload/" + event, {
-                method: "POST",
-                body: formData
-            });
-            const data = await response.json();
-            document.getElementById("status").innerText = data.message;
-            loadList();
+            formData.append("file", files[i]);
+            try {
+                const res = await fetch("/upload/" + event, { method: "POST", body: formData });
+                if (res.ok) done++; else failed++;
+            } catch (e) { failed++; }
+
+            const pct = Math.round(((i + 1) / files.length) * 100);
+            bar.style.width = pct + "%";
+            bar.innerText = pct + "%";
+            status.innerText = `Uploading... ${i + 1} / ${files.length}`;
         }
 
-        async function loadList() {
-            const event = document.getElementById("eventName").value.trim();
-            if (!event) return;
-            const response = await fetch("/list/" + event);
-            const data = await response.json();
-            const container = document.getElementById("photoList");
-            container.innerHTML = "";
-            data.photos.forEach(filename => {
-                const row = document.createElement("div");
-                row.className = "thumb-row";
-                row.innerHTML = `
-                    <img src="/photos/${event}/${filename}">
-                    <span>${filename}</span>
-                    <button class="delBtn" onclick="deletePhoto('${filename}')">Delete</button>
-                `;
-                container.appendChild(row);
-            });
-        }
+        status.innerText = `✅ Done — ${done} uploaded${failed ? `, ${failed} failed` : ""}`;
+        status.style.color = "#2e7d32";
+        btn.disabled = false;
+        loadList();
+    }
 
-        async function deletePhoto(filename) {
-            const event = document.getElementById("eventName").value.trim();
-            if (!confirm("Delete this photo?")) return;
-            const response = await fetch("/delete/" + event + "/" + filename, { method: "DELETE" });
-            const data = await response.json();
-            alert(data.message);
-            loadList();
-        }
-    </script>
+    async function loadList() {
+        const event = document.getElementById("eventName").value.trim();
+        if (!event) return;
+        const res = await fetch("/list/" + event);
+        const data = await res.json();
+        const container = document.getElementById("photoList");
+        container.innerHTML = "";
+        data.photos.forEach(filename => {
+            const div = document.createElement("div");
+            div.className = "photo-item";
+            div.innerHTML = `
+                <img src="/photos/${event}/${encodeURIComponent(filename)}" loading="lazy">
+                <button class="delBtn" onclick="deletePhoto('${filename.replace(/'/g, "\\'")}')">&times;</button>
+            `;
+            container.appendChild(div);
+        });
+        document.getElementById("countText").innerText = data.photos.length + " photos in this event";
+    }
+
+    async function deletePhoto(filename) {
+        const event = document.getElementById("eventName").value.trim();
+        if (!confirm("Delete this photo?")) return;
+        await fetch("/delete/" + event + "/" + encodeURIComponent(filename), { method: "DELETE" });
+        loadList();
+    }
+</script>
+
 </body>
 </html>
