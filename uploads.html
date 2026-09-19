@@ -22,8 +22,8 @@
         .progress-bar { background: #4CAF50; height: 100%; width: 0%; transition: width .2s; color: white; font-size: 12px; text-align: center; line-height: 22px; }
         .photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 12px; margin-top: 15px; }
         .photo-item { position: relative; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 6px rgba(0,0,0,.12); }
-        .photo-item img { width: 100%; height: 110px; object-fit: cover; display: block; }
-        .delBtn { position: absolute; top: 5px; right: 5px; background: rgba(229,57,53,.92); color: white; border: none; width: 26px; height: 26px; border-radius: 50%; cursor: pointer; font-size: 15px; line-height: 1; padding: 0; }
+        .photo-item img { width: 100%; height: 110px; object-fit: cover; display: block; cursor: pointer; }
+        .delBtn { position: absolute; top: 5px; right: 5px; background: rgba(229,57,53,.92); color: white; border: none; width: 26px; height: 26px; border-radius: 50%; cursor: pointer; font-size: 15px; line-height: 1; padding: 0; z-index: 2; }
         .count { text-align: center; color: #666; font-size: 13px; margin-top: 12px; }
     </style>
 </head>
@@ -50,9 +50,15 @@
 </div>
 
 <div class="card">
-    <label>Uploaded Photos</label>
+    <label>Uploaded Photos (tap to check quality)</label>
     <div class="photo-grid" id="photoList"></div>
     <div class="count" id="countText"></div>
+</div>
+
+<div id="zoomOverlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.95); z-index:99; justify-content:center; align-items:center; flex-direction:column;">
+    <span onclick="document.getElementById('zoomOverlay').style.display='none'" style="position:absolute; top:15px; right:22px; color:white; font-size:35px; cursor:pointer;">&times;</span>
+    <img id="zoomImg" src="" style="max-width:95%; max-height:85%; border-radius:6px;">
+    <p id="zoomFilename" style="color:#ccc; margin-top:10px; font-size:13px;"></p>
 </div>
 
 <script>
@@ -104,15 +110,22 @@
         const container = document.getElementById("photoList");
         container.innerHTML = "";
         data.photos.forEach(filename => {
+            const safeName = filename.replace(/'/g, "\\'");
             const div = document.createElement("div");
             div.className = "photo-item";
             div.innerHTML = `
-                <img src="/photos/${event}/${encodeURIComponent(filename)}" loading="lazy">
-                <button class="delBtn" onclick="deletePhoto('${filename.replace(/'/g, "\\'")}')">&times;</button>
+                <img src="/photos/${event}/${encodeURIComponent(filename)}" loading="lazy" onclick="zoomPhoto('${event}', '${safeName}')">
+                <button class="delBtn" onclick="deletePhoto('${safeName}')">&times;</button>
             `;
             container.appendChild(div);
         });
         document.getElementById("countText").innerText = data.photos.length + " photos in this event";
+    }
+
+    function zoomPhoto(event, filename) {
+        document.getElementById("zoomImg").src = "/photos/" + event + "/" + encodeURIComponent(filename);
+        document.getElementById("zoomFilename").innerText = filename;
+        document.getElementById("zoomOverlay").style.display = "flex";
     }
 
     async function deletePhoto(filename) {
