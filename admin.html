@@ -9,10 +9,11 @@
         .card { max-width: 700px; margin: 0 auto 20px; background: white; border-radius: 12px; padding: 25px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
         h1 { text-align: center; color: #1a1a2e; margin: 0 0 5px; font-size: 24px; }
         .sub { text-align: center; color: #888; font-size: 13px; margin-bottom: 25px; }
-        .event-item { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; border: 1px solid #eee; border-radius: 8px; margin-bottom: 10px; }
+        .event-item { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; border: 1px solid #eee; border-radius: 8px; margin-bottom: 10px; flex-wrap: wrap; gap: 8px; }
         .event-name { font-weight: 600; color: #1a1a2e; text-transform: capitalize; }
         .btn { background: #1a1a2e; color: white; border: none; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-size: 13px; margin-left: 6px; cursor: pointer; }
         .btn-view { background: #4CAF50; }
+        .btn-del { background: #e53935; }
         .newBtn { display: block; text-align: center; background: #1a1a2e; color: white; padding: 14px; border-radius: 8px; text-decoration: none; font-weight: 600; margin-top: 10px; }
         .empty { text-align: center; color: #888; padding: 20px; }
     </style>
@@ -48,11 +49,19 @@
                 <span>
                     <a class="btn" href="/uploads.html?event=${name}">Manage</a>
                     <a class="btn btn-view" href="/gallery.html?event=${name}" target="_blank">View</a>
+                    <button class="btn btn-del" onclick="deleteEvent('${name}')">Delete</button>
                 </span>
             `;
             container.appendChild(div);
         });
     }
+
+    async function deleteEvent(name) {
+        if (!confirm(`Delete entire event "${name}" and all its photos? This cannot be undone.`)) return;
+        await fetch("/delete-event/" + name, { method: "DELETE" });
+        loadEvents();
+    }
+
     loadEvents();
 </script>
 

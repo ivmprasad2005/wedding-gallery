@@ -2,6 +2,7 @@ from fastapi import FastAPI, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 import os
+import shutil
 
 app = FastAPI()
 
@@ -46,6 +47,14 @@ def delete_photo(event: str, filename: str):
         os.remove(file_path)
         return {"message": "Photo deleted successfully!"}
     return {"message": "Photo not found!"}
+
+@app.delete("/delete-event/{event}")
+def delete_event(event: str):
+    folder = f"uploads/{event}"
+    if os.path.exists(folder):
+        shutil.rmtree(folder)
+        return {"message": "Event deleted successfully!"}
+    return {"message": "Event not found!"}
 
 os.makedirs("uploads", exist_ok=True)
 app.mount("/photos", StaticFiles(directory="uploads"), name="photos")
