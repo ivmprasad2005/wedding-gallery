@@ -32,6 +32,13 @@ def list_photos(event: str):
     files = os.listdir(folder)
     return {"photos": files}
 
+@app.get("/events")
+def list_events():
+    if not os.path.exists("uploads"):
+        return {"events": []}
+    events = [name for name in os.listdir("uploads") if os.path.isdir(f"uploads/{name}")]
+    return {"events": events}
+
 @app.delete("/delete/{event}/{filename}")
 def delete_photo(event: str, filename: str):
     file_path = f"uploads/{event}/{filename}"

@@ -9,6 +9,7 @@
         .card { max-width: 700px; margin: 0 auto 20px; background: white; border-radius: 12px; padding: 25px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
         h1 { text-align: center; color: #1a1a2e; margin: 0 0 5px; font-size: 24px; }
         .sub { text-align: center; color: #888; font-size: 13px; margin-bottom: 25px; }
+        .backlink { display: block; text-align: center; margin-bottom: 15px; color: #1a1a2e; font-size: 13px; }
         label { display: block; font-weight: 600; margin-bottom: 6px; font-size: 14px; }
         input[type="text"], input[type="file"] { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 15px; margin-bottom: 18px; }
         button { background: #1a1a2e; color: white; border: none; padding: 13px 25px; border-radius: 8px; font-size: 15px; cursor: pointer; width: 100%; font-weight: 600; }
@@ -29,6 +30,7 @@
 <body>
 
 <div class="card">
+    <a class="backlink" href="/admin.html">&larr; Back to Dashboard</a>
     <h1>తేజా స్టూడియో</h1>
     <div class="sub">Photo Upload Panel</div>
 
@@ -54,6 +56,10 @@
 </div>
 
 <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const prefillEvent = urlParams.get("event");
+    if (prefillEvent) document.getElementById("eventName").value = prefillEvent;
+
     async function uploadPhotos() {
         const event = document.getElementById("eventName").value.trim();
         const files = document.getElementById("fileInput").files;
@@ -115,6 +121,8 @@
         await fetch("/delete/" + event + "/" + encodeURIComponent(filename), { method: "DELETE" });
         loadList();
     }
+
+    if (prefillEvent) loadList();
 </script>
 
 </body>

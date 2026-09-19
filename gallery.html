@@ -43,8 +43,6 @@
     const event = params.get("event");
     document.getElementById("eventTitle").innerText = event ? event.replace(/-/g, " ").toUpperCase() : "GALLERY";
 
-    let lastCount = -1;
-
     async function loadPhotos() {
         if (!event) {
             document.getElementById("emptyMsg").innerText = "No event selected.";
@@ -53,8 +51,6 @@
         try {
             const res = await fetch("/list/" + event);
             const data = await res.json();
-            if (data.photos.length === lastCount) return;
-            lastCount = data.photos.length;
 
             const container = document.getElementById("photo-container");
             container.innerHTML = "";
