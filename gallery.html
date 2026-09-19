@@ -2,7 +2,7 @@
 <html>
 <head>
     <title>Teja Digitals</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
         * { box-sizing: border-box; }
         body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; background: #0f0f18; color: white; min-height: 100vh; }
@@ -10,13 +10,14 @@
         header h1 { margin: 0; font-size: 22px; letter-spacing: 1px; }
         header .brand { font-size: 12px; color: #ffd700; margin-top: 6px; letter-spacing: 2px; text-transform: uppercase; }
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; padding: 15px; }
-        .grid img { width: 100%; height: 150px; object-fit: cover; border-radius: 8px; cursor: pointer; transition: transform .2s; touch-action: manipulation; }
+        .grid img { width: 100%; height: 150px; object-fit: cover; border-radius: 8px; cursor: pointer; transition: transform .2s; }
         .grid img:hover { transform: scale(1.03); }
         .empty { text-align: center; padding: 60px 20px; color: #888; }
-        #overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.96); justify-content: center; align-items: center; flex-direction: column; z-index: 99; touch-action: manipulation; }
-        #overlay img { max-width: 94%; max-height: 78%; border-radius: 6px; }
+        #overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.96); justify-content: center; align-items: center; flex-direction: column; z-index: 99; overflow: hidden; }
+        #overlay img { max-width: 94%; max-height: 78%; border-radius: 6px; touch-action: pinch-zoom; cursor: zoom-in; transition: transform .1s ease; }
         #downloadBtn { margin-top: 18px; padding: 12px 30px; background: #4CAF50; color: white; text-decoration: none; border-radius: 30px; font-weight: 600; }
-        #closeBtn { position: absolute; top: 15px; right: 22px; color: white; font-size: 38px; cursor: pointer; line-height: 1; }
+        #closeBtn { position: absolute; top: 15px; right: 22px; color: white; font-size: 38px; cursor: pointer; line-height: 1; z-index: 100; }
+        .hint { color: #888; font-size: 12px; margin-top: 8px; }
         footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
     </style>
 </head>
@@ -33,6 +34,7 @@
 <div id="overlay">
     <span id="closeBtn">&times;</span>
     <img id="bigPhoto" src="">
+    <p class="hint">Scroll / Pinch to zoom · Double-click to reset</p>
     <a id="downloadBtn" href="" download>⬇ Download</a>
 </div>
 
@@ -67,13 +69,31 @@
         } catch (e) {}
     }
 
+    let zoomScale = 1;
+    const bigPhotoEl = document.getElementById("bigPhoto");
+
     function openPhoto(url, filename) {
-        document.getElementById("bigPhoto").src = url;
+        zoomScale = 1;
+        bigPhotoEl.style.transform = "scale(1)";
+        bigPhotoEl.src = url;
         const btn = document.getElementById("downloadBtn");
         btn.href = url;
         btn.download = filename;
         document.getElementById("overlay").style.display = "flex";
     }
+
+    bigPhotoEl.addEventListener("wheel", (e) => {
+        e.preventDefault();
+        zoomScale += e.deltaY * -0.0015;
+        zoomScale = Math.min(Math.max(1, zoomScale), 4);
+        bigPhotoEl.style.transform = "scale(" + zoomScale + ")";
+    });
+
+    bigPhotoEl.addEventListener("dblclick", () => {
+        zoomScale = zoomScale > 1 ? 1 : 2;
+        bigPhotoEl.style.transform = "scale(" + zoomScale + ")";
+    });
+
     document.getElementById("closeBtn").onclick = () => {
         document.getElementById("overlay").style.display = "none";
     };
