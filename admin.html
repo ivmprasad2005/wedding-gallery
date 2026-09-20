@@ -13,6 +13,7 @@
         .event-name { font-weight: 600; color: #1a1a2e; text-transform: capitalize; }
         .btn { background: #1a1a2e; color: white; border: none; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-size: 13px; margin-left: 6px; cursor: pointer; }
         .btn-view { background: #4CAF50; }
+        .btn-qr { background: #ffd700; color: #1a1a2e; border: none; cursor: pointer; }
         .btn-del { background: #e53935; }
         .newBtn { display: block; text-align: center; background: #1a1a2e; color: white; padding: 14px; border-radius: 8px; text-decoration: none; font-weight: 600; margin-top: 10px; }
         .empty { text-align: center; color: #888; padding: 20px; }
@@ -21,7 +22,7 @@
 <body>
 
 <div class="card">
-    <h1>తేజా స్టూడియో</h1>
+    <h1>తేజ స్టూడియో</h1>
     <div class="sub">All Events Dashboard</div>
     <a class="newBtn" href="/uploads.html">+ Create / Upload New Event</a>
 </div>
@@ -29,6 +30,16 @@
 <div class="card">
     <label style="font-weight:600;">All Events</label>
     <div id="eventList" style="margin-top:15px;"></div>
+</div>
+
+<div id="qrOverlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.85); z-index:99; justify-content:center; align-items:center; flex-direction:column;">
+    <div style="background:white; padding:25px; border-radius:12px; text-align:center; max-width:320px;">
+        <h3 id="qrEventName" style="margin-top:0; color:#1a1a2e;"></h3>
+        <img id="qrImage" src="" style="width:250px; height:250px;">
+        <br><br>
+        <a id="qrDownload" href="" download style="display:block; background:#1a1a2e; color:white; padding:10px; border-radius:8px; text-decoration:none; font-weight:600; margin-bottom:8px;">Download QR</a>
+        <button onclick="document.getElementById('qrOverlay').style.display='none'" style="background:#eee; border:none; padding:10px 20px; border-radius:8px; cursor:pointer;">Close</button>
+    </div>
 </div>
 
 <script>
@@ -49,6 +60,7 @@
                 <span>
                     <a class="btn" href="/uploads.html?event=${name}">Manage</a>
                     <a class="btn btn-view" href="/gallery.html?event=${name}" target="_blank">View</a>
+                    <button class="btn btn-qr" onclick="showQR('${name}')">QR</button>
                     <button class="btn btn-del" onclick="deleteEvent('${name}')">Delete</button>
                 </span>
             `;
@@ -60,6 +72,16 @@
         if (!confirm(`Delete entire event "${name}" and all its photos? This cannot be undone.`)) return;
         await fetch("/delete-event/" + name, { method: "DELETE" });
         loadEvents();
+    }
+
+    function showQR(name) {
+        const galleryUrl = window.location.origin + "/gallery.html?event=" + name;
+        const qrApiUrl = "https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=" + encodeURIComponent(galleryUrl);
+        document.getElementById("qrEventName").innerText = name.replace(/-/g, " ");
+        document.getElementById("qrImage").src = qrApiUrl;
+        document.getElementById("qrDownload").href = qrApiUrl;
+        document.getElementById("qrDownload").download = name + "-qr.png";
+        document.getElementById("qrOverlay").style.display = "flex";
     }
 
     loadEvents();
