@@ -56,12 +56,11 @@
 
             const container = document.getElementById("photo-container");
             container.innerHTML = "";
-            data.photos.forEach(filename => {
-                const url = "/photos/" + event + "/" + encodeURIComponent(filename);
+            data.photos.forEach(photo => {
                 const img = document.createElement("img");
-                img.src = url;
+                img.src = photo.url;
                 img.loading = "lazy";
-                img.onclick = () => openPhoto(url, filename);
+                img.onclick = () => openPhoto(photo.url, photo.filename);
                 container.appendChild(img);
             });
             document.getElementById("emptyMsg").style.display = data.photos.length ? "none" : "block";
